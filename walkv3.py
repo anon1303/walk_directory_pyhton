@@ -9,6 +9,7 @@ DISCRIPTION:
 
 import os, sys
 from docopt import docopt
+from stat import *
 
 
 
@@ -37,32 +38,18 @@ def get_path():
 
 
 def get_path_stat(path):
-    status = os.stat(path)
+
     print("*"*10 + "PATH STAT" + "*"*10)
-    print(status)
+    print("SOCK ---> ",S_IFSOCK)
+    print("LINK ---> ",S_IFLNK)
+    print("REG ---> ",S_IFREG)
+    print("BLK ---> ",S_IFBLK)
+    print("DIR ---> ",S_IFDIR)
+    print("CHR ---> ",S_IFCHR)
+    print("FIFO ---> ",S_IFIFO)
+    print("DOOR ---> ",S_IFDOOR)
+
     print("\n")
-    
-
-
-
-    # files = os.scandir(path)
-    # # all_files = list()
-
-    # for file in os.listdir(files):
-    #     pathname = os.path.joint(path, file)
-    #     mode = os.lstat(pathname).st_mode
-    #     print(stat.S_ISFIFO(mode))
-        # if S_ISDIR(mode):
-        #     # It's a directory, recurse into it
-        #     walktree(pathname, callback)
-        # elif S_ISREG(mode):
-        #     # It's a file, call the callback function
-        #     callback(pathname)
-        # else:
-        #     # Unknown file type, print a message
-        #     print('Skipping %s' % pathname)
-
-
     # [ REG  => S_IFREG  ],
     # [ DIR  => S_IFDIR  ],
     # [ LNK  => S_IFLNK  ],
@@ -70,6 +57,32 @@ def get_path_stat(path):
     # [ BLK  => S_IFBLK  ],
     # [ CHR  => S_IFCHR  ],
     # [ FIFO => S_IFIFO  ]
+
+def walktree(top, callback):
+    '''recursively descend the directory tree rooted at top,
+       calling the callback function for each regular file'''
+
+    for f in os.listdir(top):
+        pathname = os.path.join(top, f)
+        mode = os.lstat(pathname).st_mode
+
+
+
+
+        if S_ISDIR(mode):
+            # It's a directory, recurse into it
+            walktree(pathname, callback)
+        elif S_ISREG(mode):
+
+            # It's a file, call the callback function
+            callback(pathname)
+        else:
+            # Unknown file type, print a message
+            print('Skipping %s' % pathname)
+
+def visitfile(file):
+    # print('visiting', file)
+    pass
 
 
 def get_list(path):
@@ -80,17 +93,16 @@ def get_list(path):
     for file in files:
 
         if file.is_file():
-            print("- ",file.name)
+            print("File: ",file.name)
         
         fullPath = os.path.join(path, file)
         if os.path.isdir(fullPath):
-            print(file.name)
+            print("Dir: ",file.name)
             # folder = entry.name
             subpath = get_list(fullPath)
 
 def main(PATH):
 
-    # path = 'D:/programming/go/'
     path = PATH['<PATHNAME>']
 
 
@@ -102,11 +114,11 @@ if __name__ == '__main__':
    
 
     try:
-        
         PATH = get_path()
+        walktree(PATH['<PATHNAME>'], visitfile)
         main(PATH)
         
-    except Exception as e:
-        raise e
+    except OSError:
+        print("\nPath or directory name syntax is incorrect: ",PATH['<PATHNAME>'])
     else:
         pass
